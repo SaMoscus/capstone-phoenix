@@ -1,0 +1,6 @@
+admin_cidr    = "203.0.113.10/32"
+ami_id        = "ami-REPLACE_WITH_UBUNTU_24_04_AMI"
+key_name      = "k3s-key"
+instance_type = "t3.small"
+worker_count  = 2
+

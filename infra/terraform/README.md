@@ -1,17 +1,21 @@
-# infra/terraform/ — provision the nodes
+# Terraform
 
-Seed this from your single-EC2 Terraform and grow it to a small fleet.
+This directory provisions the AWS infrastructure for the k3s cluster:
 
-**Must produce:**
-- 1 control-plane VM + **2+ worker VMs** (small instances are fine).
-- Modules: `network`, `security_group`/firewall, `compute`.
-- **Remote state** (S3 + DynamoDB lock, GCS, etc.) — no `*.tfstate` in git.
-- Firewall: world-open only `80`/`443`; `22` from your IP; `6443` and node ports NOT public.
-- `outputs.tf`: control-plane + worker IPs (public for SSH, private for k3s join) for Ansible.
-- Everything parameterized in `variables.tf`; ship a `terraform.tfvars.example` (real one gitignored).
+- VPC, internet gateway, route table, and public subnets
+- Security group with `80/443` public, `22/6443` restricted to `admin_cidr`, and internal node traffic
+- One control-plane EC2 instance
+- Two or more worker EC2 instances
+- Outputs for Ansible inventory
 
-**Acceptance:** `terraform apply` from clean → you can SSH to every node; `terraform destroy`
-leaves nothing behind. Re-running `plan` after apply shows no drift.
+Before running, edit `versions.tf` with your real S3 backend bucket and DynamoDB lock table. Then copy `terraform.tfvars.example` to `terraform.tfvars` and fill in your `admin_cidr`, Ubuntu AMI, and SSH key pair.
 
-> Keep infra lean: one k3s server is fine — you do NOT need a multi-master/HA control plane.
-> The difficulty in this capstone lives in Kubernetes, not the control plane.
+```bash
+terraform init
+terraform plan
+terraform apply
+terraform output -raw ansible_inventory > ../ansible/inventory.ini
+```
+
+Do not commit `terraform.tfvars`, plans, or state files.
+
